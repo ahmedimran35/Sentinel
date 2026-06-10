@@ -9,11 +9,7 @@ export interface PermissionGate {
 }
 
 export class AlwaysAllowGate implements PermissionGate {
-  async request(
-    _turnId: string,
-    _action: string,
-    _risk: string,
-  ): Promise<'approved' | 'denied'> {
+  async request(): Promise<'approved' | 'denied'> {
     return 'approved';
   }
 }
@@ -27,13 +23,7 @@ export class EmittingGate implements PermissionGate {
     risk: string,
   ): Promise<'approved' | 'denied'> {
     return new Promise((resolve) => {
-      const event: SentinelEvent = {
-        type: 'awaiting_permission',
-        turnId,
-        action,
-        risk,
-      };
-      this.emit(event);
+      this.emit({ type: 'awaiting_permission', turnId, action, risk });
       resolve('approved');
     });
   }
