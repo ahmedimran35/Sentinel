@@ -15,3 +15,9 @@ export { FilesystemJail } from './filesystem-jail.js';
 export { redactSecrets } from './secret-redactor.js';
 export { ConfiguredGate } from './configured-gate.js';
 export type { GateConfig, PermissionRule } from './configured-gate.js';
+
+// Phase 5 — LSP + AGENTS.md
+export { LSPManager, detectLanguage } from './lsp-manager.js';
+export type { Diagnostic } from './lsp-manager.js';
+export { analyzeRepo, generateAgentsMd, initAgentsMd } from './agents-init.js';
+export type { RepoAnalysis } from './agents-init.js';
