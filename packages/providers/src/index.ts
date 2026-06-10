@@ -1,1 +1,17 @@
 export type { Provider, ProviderMessage } from './types.js';
+export { AnthropicProvider } from './anthropic.js';
+export type { AnthropicConfig } from './anthropic.js';
+export { OpenAICompatProvider, createOpenAIProvider } from './openai-compat.js';
+export type { OpenAICompatConfig } from './openai-compat.js';
+export { createNIMProvider } from './nim.js';
+export type { NIMConfig } from './nim.js';
+export { GeminiProvider } from './gemini.js';
+export type { GeminiConfig } from './gemini.js';
+export { ProviderRouter } from './router.js';
+export type { ModelRoute } from './router.js';
+export { CostTracker, calculateCost } from './cost-tracker.js';
+export { withRetry } from './retry.js';
+export type { RetryOptions } from './retry.js';
+export { parseSSE, parseJSONData } from './sse-parser.js';
+export { RecordingProvider, ReplayProvider } from './recorder.js';
+export type { RecordedStream } from './recorder.js';
