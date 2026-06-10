@@ -1,1 +1,12 @@
 export type { Tool } from '@sentinel/shared';
+export { readFileTool } from './read-file.js';
+export { writeFileTool } from './write-file.js';
+export { editFileTool } from './edit-file.js';
+export { bashTool, getSessionCwd, destroySession } from './bash.js';
+export { globTool } from './glob.js';
+export { grepTool } from './grep.js';
+export { todoTool } from './todo.js';
+export { webFetchTool } from './web-fetch.js';
+export { dispatchAgentTool, lspDiagnosticsTool } from './stubs.js';
+export { loadHooks, runHook } from './hooks.js';
+export type { HookEvent, HooksConfig } from './hooks.js';
