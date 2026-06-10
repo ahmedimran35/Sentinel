@@ -21,3 +21,10 @@ export { LSPManager, detectLanguage } from './lsp-manager.js';
 export type { Diagnostic } from './lsp-manager.js';
 export { analyzeRepo, generateAgentsMd, initAgentsMd } from './agents-init.js';
 export type { RepoAnalysis } from './agents-init.js';
+
+// Phase 6 — Context management + orchestration
+export { ContextManager } from './context-manager.js';
+export type { CompactionResult } from './context-manager.js';
+export { MemoryBank } from './memory-bank.js';
+export { Orchestrator } from './orchestrator.js';
+export type { OrchestratorStep, OrchestrationResult } from './orchestrator.js';
