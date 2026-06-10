@@ -1,0 +1,27 @@
+{
+  "name": "@sentinel/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "sentinel": "./dist/index.js"
+  },
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentinel/core": "workspace:*",
+    "@sentinel/tui": "workspace:*",
+    "@sentinel/sdk": "workspace:*",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

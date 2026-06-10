@@ -1,0 +1,23 @@
+{
+  "name": "sentinel-monorepo",
+  "private": true,
+  "packageManager": "pnpm@10.33.3",
+  "engines": { "node": ">=22" },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint 'packages/*/src/**/*.ts' 'apps/*/src/**/*.ts'",
+    "format": "prettier --check '**/*.ts'",
+    "format:fix": "prettier --write '**/*.ts'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  }
+}
