@@ -1,1 +1,14 @@
-export {};
+export { SentinelApp } from './app.js';
+export type { SentinelAppProps } from './app.js';
+export { Header } from './components/header.js';
+export { MessageList, UserMessage, AssistantMessage, ToolCallCard } from './components/message-list.js';
+export { DiffView } from './components/diff-view.js';
+export { PermissionPrompt } from './components/permission-prompt.js';
+export { InputEditor } from './components/input-editor.js';
+export { StatusBar } from './components/status-bar.js';
+export { FilePicker } from './components/file-picker.js';
+export { CommandPalette } from './components/command-palette.js';
+export { OrchestratorTree } from './components/orchestrator-tree.js';
+export { Toast } from './components/toast.js';
+export { darkTheme, lightTheme, gruvboxTheme, themes } from './theme.js';
+export type { Theme } from './theme.js';

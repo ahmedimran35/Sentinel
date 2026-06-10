@@ -1,9 +1,6 @@
 import type { z } from 'zod';
 
-export interface Tool<
-  TInput extends z.ZodTypeAny = z.ZodTypeAny,
-  TOutput = unknown,
-> {
+export interface Tool<TInput extends z.ZodTypeAny = z.ZodTypeAny> {
   name: string;
   description: string;
   risk: 'read' | 'write' | 'execute' | 'network';
