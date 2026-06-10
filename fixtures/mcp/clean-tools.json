@@ -1,0 +1,8 @@
+[
+  { "name": "read_file", "description": "Read a file with line numbers", "inputSchema": {} },
+  { "name": "grep", "description": "Search file contents with regex", "inputSchema": {} },
+  { "name": "glob", "description": "Find files matching a pattern", "inputSchema": {} },
+  { "name": "write_file", "description": "Write content to a file", "inputSchema": {} },
+  { "name": "edit_file", "description": "Edit a file with old_str replacement", "inputSchema": {} },
+  { "name": "bash", "description": "Run a shell command", "inputSchema": {} }
+]
