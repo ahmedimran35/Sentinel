@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Tool } from '@sentinel/shared';
 
-export const dispatchAgentTool: Tool<typeof DispatchAgentSchema> = {
+export const dispatchAgentTool: Tool = {
   name: 'dispatch_agent',
   description: '[STUB] Dispatch a sub-agent to complete a task. Will be wired in Phase 6.',
   risk: 'execute',

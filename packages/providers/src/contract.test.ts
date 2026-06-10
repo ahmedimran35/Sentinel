@@ -11,8 +11,6 @@ import {
 } from './fixtures.js';
 import type { Provider, ProviderMessage } from './types.js';
 import type { SentinelEvent, Tool, TurnConfig } from '@sentinel/shared';
-import { z } from 'zod';
-
 class TestProvider implements Provider {
   costPer1kTokens = { input: 0, output: 0 };
   constructor(private events: SentinelEvent[]) {}
@@ -32,9 +30,6 @@ function collect(iterable: AsyncIterable<SentinelEvent>): Promise<SentinelEvent[
   return (async () => { for await (const e of iterable) events.push(e); return events; })();
 }
 
-function makeTool(name: string): Tool {
-  return { name, description: `tool ${name}`, risk: 'read' as const, inputSchema: z.object({}) as Tool['inputSchema'], async *execute() { yield { type: 'tool_result' as const, turnId: 'test', result: { callId: 'c1', output: 'ok', isError: false } }; } };
-}
 
 describe('Provider contract tests', () => {
   describe('Text-only turns', () => {

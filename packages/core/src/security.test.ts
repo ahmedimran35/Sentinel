@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { analyzeBashCommand } from './bash-analyzer.js';
 import { FilesystemJail } from './filesystem-jail.js';
 import { redactSecrets } from './secret-redactor.js';
-import { MODES, checkModePermission } from './modes.js';
+import { checkModePermission } from './modes.js';
 
 describe('Bash analyzer', () => {
   const maliciousCommands = [

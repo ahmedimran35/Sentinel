@@ -37,7 +37,7 @@ export class AnthropicProvider implements Provider {
   async *streamChat(
     messages: ProviderMessage[],
     tools: Tool[],
-    config: TurnConfig,
+    _config: TurnConfig,
     signal: AbortSignal,
   ): AsyncIterable<SentinelEvent> {
     const baseUrl = this.config.baseUrl ?? 'https://api.anthropic.com/v1';
@@ -79,7 +79,6 @@ export class AnthropicProvider implements Provider {
     }
 
     let currentToolId: string | undefined;
-    let currentToolName: string | undefined;
     let currentToolArgs = '';
 
     for await (const msg of parseSSE(body, signal)) {
@@ -91,7 +90,6 @@ export class AnthropicProvider implements Provider {
         const block = parsed.content_block;
         if (block.type === 'tool_use') {
           currentToolId = block.id;
-          currentToolName = block.name;
           currentToolArgs = '';
           yield {
             type: 'tool_call_start',

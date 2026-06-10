@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { Tool, SentinelEvent } from '@sentinel/shared';
+import type { Tool } from '@sentinel/shared';
 
 const MAX_LINES = 2000;
 

@@ -29,22 +29,40 @@ importers:
       '@sentinel/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@sentinel/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
       '@sentinel/sdk':
         specifier: workspace:*
         version: link:../../packages/sdk
+      '@sentinel/tools':
+        specifier: workspace:*
+        version: link:../../packages/tools
       '@sentinel/tui':
         specifier: workspace:*
         version: link:../../packages/tui
       commander:
-        specifier: ^13.0.0
-        version: 13.1.0
+        specifier: ^15.0.0
+        version: 15.0.0
+      ink:
+        specifier: ^5.0.0
+        version: 5.2.1(@types/react@18.3.0)(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
     devDependencies:
+      '@types/react':
+        specifier: ^18.3.0
+        version: 18.3.0
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
 
   packages/core:
     dependencies:
+      '@sentinel/providers':
+        specifier: workspace:*
+        version: link:../providers
       '@sentinel/shared':
         specifier: workspace:*
         version: link:../shared
@@ -93,6 +111,9 @@ importers:
 
   packages/sdk:
     dependencies:
+      '@sentinel/core':
+        specifier: workspace:*
+        version: link:../core
       '@sentinel/shared':
         specifier: workspace:*
         version: link:../shared
@@ -662,9 +683,9 @@ packages:
   color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
-  commander@13.1.0:
-    resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
-    engines: {node: '>=18'}
+  commander@15.0.0:
+    resolution: {integrity: sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg==}
+    engines: {node: '>=22.12.0'}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -1616,7 +1637,7 @@ snapshots:
 
   color-name@1.1.4: {}
 
-  commander@13.1.0: {}
+  commander@15.0.0: {}
 
   concat-map@0.0.1: {}
 

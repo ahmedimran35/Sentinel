@@ -1,6 +1,5 @@
-import type { SentinelEvent, Tool, TurnConfig } from '@sentinel/shared';
+import type { Tool } from '@sentinel/shared';
 import type { Provider, ProviderMessage } from '@sentinel/providers';
-import type { PermissionGate } from './permission-gate.js';
 
 export interface OrchestratorStep {
   id: string;
@@ -21,7 +20,6 @@ export class Orchestrator {
     private coderProvider: Provider,
     private verifierProvider: Provider,
     private tools: Tool[],
-    private gate: PermissionGate,
     private signal: AbortSignal,
   ) {}
 

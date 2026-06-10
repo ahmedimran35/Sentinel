@@ -27,6 +27,10 @@ export class RecordingProvider implements Provider {
     this.recordings.push({ events });
   }
 
+  countTokens(text: string): number {
+    return this.inner.countTokens(text);
+  }
+
   getRecordings(): readonly RecordedStream[] {
     return this.recordings;
   }

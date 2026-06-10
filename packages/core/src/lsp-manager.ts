@@ -8,12 +8,6 @@ interface LSPRequest {
   params?: unknown;
 }
 
-interface LSPResponse {
-  id: number;
-  result?: unknown;
-  error?: { code: number; message: string };
-}
-
 interface LSPNotification {
   method: string;
   params?: unknown;
@@ -124,7 +118,7 @@ export class LSPManager {
     });
   }
 
-  async requestDiagnostics(lang: string, filePath: string): Promise<Diagnostic[]> {
+  async requestDiagnostics(_lang: string, filePath: string): Promise<Diagnostic[]> {
     const existing = this.diagnostics.filter((d) => d.file === filePath);
     // LSP pushes diagnostics via notifications; we return what we've collected
     return existing;

@@ -143,7 +143,7 @@ async function executeTool(
       if (event.type === 'tool_result' && event.result) {
         return event.result;
       }
-      if (event.type === 'text_delta') {
+      if (event.type === 'text_delta' && event.delta) {
         outputParts.push(event.delta);
       }
     }

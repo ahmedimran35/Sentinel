@@ -33,7 +33,7 @@ export class GeminiProvider implements Provider {
   async *streamChat(
     messages: ProviderMessage[],
     tools: Tool[],
-    config: TurnConfig,
+    _config: TurnConfig,
     signal: AbortSignal,
   ): AsyncIterable<SentinelEvent> {
     const baseUrl = this.config.baseUrl!;

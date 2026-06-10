@@ -12,12 +12,12 @@ export class ProviderRouter {
   private routes: Map<string, ModelRoute> = new Map();
 
   constructor(
-    private defaultProvider: Provider,
+    private _defaultProvider: Provider,
     model: string,
     defaultConfig: TurnConfig,
   ) {
     this.currentModel = model;
-    this.routes.set('main', { role: 'main', provider: defaultProvider, config: defaultConfig });
+    this.routes.set('main', { role: 'main', provider: this._defaultProvider, config: defaultConfig });
   }
 
   setRoute(route: ModelRoute): void {
@@ -40,7 +40,7 @@ export class ProviderRouter {
   async *streamChat(
     messages: ProviderMessage[],
     tools: Tool[],
-    config: TurnConfig,
+    _config: TurnConfig,
     signal: AbortSignal,
     role: 'main' | 'plan' | 'subagent' | 'compaction' = 'main',
   ): AsyncIterable<SentinelEvent> {

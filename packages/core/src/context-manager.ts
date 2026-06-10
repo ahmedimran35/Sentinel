@@ -1,5 +1,3 @@
-import type { SentinelEvent } from '@sentinel/shared';
-
 export interface TokenCounter {
   (text: string): number;
 }
@@ -13,8 +11,6 @@ export interface CompactionResult {
 export class ContextManager {
   private tokenCount = 0;
   private messages: Array<{ role: string; content: string; tokens: number }> = [];
-  private lastCompactBoundary: number | null = null;
-
   constructor(
     private maxTokens: number,
     private countTokens: TokenCounter,
@@ -68,8 +64,6 @@ export class ContextManager {
 
     this.messages = kept;
     this.tokenCount = kept.reduce((sum, m) => sum + m.tokens, 0);
-    this.lastCompactBoundary = Date.now();
-
     return { summary, pruned, kept: kept.length };
   }
 

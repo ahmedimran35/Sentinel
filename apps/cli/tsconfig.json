@@ -7,7 +7,9 @@
   "include": ["src"],
   "references": [
     { "path": "../../packages/core" },
-    { "path": "../../packages/tui" },
-    { "path": "../../packages/sdk" }
+    { "path": "../../packages/providers" },
+    { "path": "../../packages/tools" },
+    { "path": "../../packages/sdk" },
+    { "path": "../../packages/tui" }
   ]
 }

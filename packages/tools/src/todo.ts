@@ -3,12 +3,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { Tool } from '@sentinel/shared';
 
-interface TodoItem {
-  content: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  priority: 'high' | 'medium' | 'low';
-}
-
 const TodoReadSchema = z.object({
   action: z.literal('read'),
 });
