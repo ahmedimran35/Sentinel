@@ -67,35 +67,126 @@ Sentinel is an open-source AI coding agent that runs entirely in your terminal. 
 
 ## Comparison
 
+Real-world data gathered June 2026. Sentinel data is based on this codebase (v0.1.0).  
+OpenCode: 1.14.33 / 120K+ GitHub stars. Kilo Code: v7 / 500+ models. Claude Code: v2.1.138 / 285 releases.
+
+### General
+
 | Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
 |---------|----------|----------|-----------|-------------|
-| **Security Score** | **92/100** | 82/100 | 72/100 | — |
-| MCP tool-poisoning scanner | ✅ | ❌ | ❌ | ❌ |
-| Permission gate (per-action) | ✅ | ✅ | ⚠️ | ✅ |
-| Filesystem jail (realpath) | ✅ | ⚠️ | ❌ | ✅ |
-| execSync → spawnSync | ✅ 0 calls | ⚠️ mixed | ❌ | ⚠️ mixed |
-| Zero `any` types (src/) | ✅ | ⚠️ | ❌ | — |
-| Provider-agnostic | ✅ 10 providers | ❌ Anthropic-only | ⚠️ 3-4 | ❌ Anthropic-only |
-| Local models (Ollama) | ✅ | ❌ | ✅ | ❌ |
-| Three surfaces (TUI/CLI/SDK) | ✅ | ✅ CLI only | ❌ | ⚠️ CLI+TUI |
-| Multi-session tabs | ✅ | ❌ | ❌ | ✅ |
-| Theme system | ✅ 13 themes | ❌ | ❌ | ❌ |
-| Workflow composer (DAG) | ✅ | ❌ | ❌ | ❌ |
-| LSP diagnostics panel | ✅ | ❌ | ❌ | ❌ |
-| Web preview in terminal | ✅ | ❌ | ❌ | ❌ |
-| Code review / PR integration | ✅ | ❌ | ❌ | ✅ |
-| MCP marketplace | ✅ | ❌ | ❌ | ❌ |
-| Custom tools (config-defined) | ✅ | ❌ | ✅ | ❌ |
-| Skills system | ✅ | ✅ | ❌ | ❌ |
-| Enterprise config | ✅ | ❌ | ❌ | ✅ |
-| Cloud sync | ✅ | ❌ | ❌ | ❌ |
-| Plugin system (hooks) | ✅ | ❌ | ❌ | ❌ |
-| Headless mode (CLI) | ✅ | ❌ | ❌ | ✅ |
-| SDK for embedding | ✅ | ❌ | ❌ | ❌ |
-| Cost tracking / budgets | ✅ | ❌ | ⚠️ | ✅ |
-| OAuth provider support | ✅ 3 | ❌ | ❌ | ✅ |
-| Auto-model router | ✅ | ❌ | ❌ | ❌ |
-| VSCode / JetBrains / Neovim | ✅ | ✅ | ❌ | ❌ |
+| **Language** | TypeScript (Node.js) | Go | TypeScript (Node.js) | TypeScript (Node.js) |
+| **License** | MIT | MIT | Apache 2.0 / MIT | Proprietary |
+| **Surfaces** | TUI + CLI + SDK | TUI + CLI + Desktop + IDE | VS Code + JetBrains + CLI + Slack + Cloud | CLI + Desktop + Web |
+| **GitHub Stars** | — | 120K+ | 1.2M+ installs (VS Code) | 30K+ |
+| **Pricing** | Free (BYO API keys) | Free (BYO API keys) | Free (BYO API keys) or $19-199/mo Kilo Pass | $20/mo Pro or API usage |
+
+### Model Support
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Provider-agnostic** | ✅ 10 providers | ✅ 75+ providers | ✅ 500+ models routed | ❌ Anthropic-only |
+| **Local models (Ollama)** | ✅ | ✅ | ✅ | ❌ |
+| **Auto-model router** | ✅ | ❌ | ❌ | ❌ |
+| **Multi-model comparisons** | ❌ | ❌ | ✅ (side-by-side) | ❌ |
+| **Context window** | Model-dependent | Model-dependent | Model-dependent | 1M tokens |
+
+### Agent Capabilities
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Multi-turn agent loop** | ✅ | ✅ | ✅ | ✅ |
+| **Plan / Build modes** | ✅ | ✅ | ✅ (Architect/Code/Debug) | ✅ |
+| **Parallel tool execution** | 🔄 (single-tool loop) | ✅ | ✅ | ✅ |
+| **Subagent delegation** | ✅ (dispatchAgent) | ✅ (multi-agent) | ✅ (Orchestrator) | ✅ (Agent Teams) |
+| **Multi-session tabs** | ✅ | ✅ | ✅ | ✅ |
+| **Sessions persist across restarts** | ✅ (SQLite) | ✅ (SQLite) | ✅ | ✅ |
+| **Auto context compaction** | ✅ | ✅ | ❌ | ✅ |
+| **Checkpoint / rewind** | ✅ undo/redo | ✅ | ❌ | ✅ |
+
+### Terminal UI
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Framework** | Ink 7 + React 19 | Bubble Tea (Go) | Ink 5 + React 18 | Custom terminal |
+| **Theme system** | ✅ 13 themes | ✅ | ❌ | ❌ |
+| **Diff viewer** | ✅ Side-by-side + unified | ✅ Unified | ✅ Unified | ✅ |
+| **Workflow composer (DAG)** | ✅ | ❌ | ❌ | ❌ |
+| **LSP diagnostics panel** | ✅ | ❌ | ❌ | ❌ |
+| **Web preview in terminal** | ✅ | ❌ | ❌ | ❌ |
+| **Conversation minimap** | ✅ | ❌ | ❌ | ❌ |
+| **Context gauge** | ✅ | ❌ | ❌ | ❌ |
+| **Animations (particle, ripple)** | ✅ | ❌ | ❌ | ❌ |
+| **Keybinding customization** | ✅ (leader key) | ✅ | ❌ | ✅ |
+
+### Code Intelligence
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **LSP integration** | ✅ | ✅ | ✅ | ✅ |
+| **Codebase index** | ✅ | ❌ | ❌ | ❌ |
+| **Code review / PR integration** | ✅ | ❌ | ✅ (inline review) | ✅ |
+| **AGENTS.md generator** | ✅ | ✅ (init) | ❌ | ✅ (CLAUDE.md) |
+| **Memory / cross-session** | ✅ Memory Bank | ❌ | ✅ Memory Bank | ✅ Auto Memory |
+
+### Security
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Permission gate** | ✅ per-action | ✅ per-action | ✅ per-action | ✅ per-action |
+| **Filesystem jail (realpath)** | ✅ | ✅ | ❌ | ❌ |
+| **MCP tool-poisoning scanner** | ✅ (unique) | ❌ | ❌ | ❌ |
+| **Secret redaction** | ✅ | ❌ | ❌ | ❌ |
+| **Bash command analysis** | ✅ | ❌ | ❌ | ❌ |
+| **Sandbox execution** | ❌ | ❌ | ❌ | ❌ |
+| **0 execSync calls in library** | ✅ | 🔄 (mixed) | ❌ | 🔄 (mixed) |
+
+### Extensibility
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **MCP support** | ✅ Stdio + Remote + OAuth | ✅ Stdio + Remote | ✅ Stdio + Remote | ✅ Stdio + Remote |
+| **MCP marketplace** | ✅ | ✅ | ❌ | ❌ |
+| **Skills (SKILL.md)** | ✅ | ✅ | ❌ | ✅ |
+| **Custom commands** | ✅ (templated) | ✅ (templated) | ✅ | ✅ (slash commands) |
+| **Custom tools** | ✅ (config-defined) | ❌ | ❌ | ❌ |
+| **Plugin system (hooks)** | ✅ | ❌ | ❌ | ✅ |
+| **IDE support** | ✅ VS Code / JetBrains / Neovim | ✅ VS Code / JetBrains | ✅ VS Code / JetBrains / Slack | ✅ VS Code / JetBrains |
+
+### Enterprise
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Enterprise config** | ✅ managed + validation | ❌ | ❌ | ❌ |
+| **Cloud sync** | ✅ encrypted | ❌ | ❌ | ❌ |
+| **Daemon / background agents** | ✅ | ❌ | ✅ (KiloClaw) | ✅ (Routines) |
+| **Cost tracking / budgets** | ✅ | ❌ | ✅ | ✅ |
+| **Session sharing / export** | ✅ | ✅ | ✅ | ✅ |
+| **OAuth provider auth** | ✅ (3 providers) | ✅ | ✅ | ❌ (API key only) |
+| **Remote agent relay** | ✅ | ❌ | ❌ | ❌ |
+
+### Voice / Input
+
+| Feature | Sentinel | OpenCode | Kilo Code | Claude Code |
+|---------|----------|----------|-----------|-------------|
+| **Voice input** | ✅ | ❌ | ✅ | ✅ (20 languages) |
+| **Web search** | ✅ (6 providers) | ✅ | ❌ | ✅ |
+
+### Development Status
+
+| Metric | Sentinel | OpenCode | Kilo Code | Claude Code |
+|--------|----------|----------|-----------|-------------|
+| **Tests** | 798 passing (49 files) | — | — | — |
+| **TypeScript errors** | 0 (strict mode) | — | — | — |
+| **Monthly developers** | — | 5M+ | 3M+ | — |
+| **Contributors** | 1 | 800+ | — | Anthropic team |
+| **Release cadence** | On-demand | Active | Active | ~36 hours |
+
+### Summary
+
+- **Sentinel** — Most secure option with unique MCP scanner, filesystem jail, and secret redaction. Strongest code intelligence (codebase index, AGENTS.md generator, LSP panel). Most feature-rich TUI with 13 themes, workflow composer, and context gauge. Has SDK and suite of enterprise features (managed config, cloud sync, remote relay). Well-tested with 0 TS errors.
+- **OpenCode** — Largest ecosystem (120K+ stars, 800+ contributors). Most providers (75+). Fast Go-based TUI. Best community support.
+- **Kilo Code** — Most models (500+). Strongest orchestrator with parallel subagents. Multi-surface (VS Code + JetBrains + CLI + Slack + Cloud). Fastest iteration on new features.
+- **Claude Code** — Best raw model capability (Claude Opus/Sonnet, 1M context). Most polished UX. Voice mode, computer use, cloud routines. Deepest Anthropic integration. Limited to Anthropic models only.
 
 ## Quick Start
 
