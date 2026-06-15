@@ -6,5 +6,8 @@
     "jsx": "react-jsx"
   },
   "include": ["src"],
-  "references": [{ "path": "../sdk" }]
+  "references": [
+    { "path": "../sdk" },
+    { "path": "../shared" }
+  ]
 }

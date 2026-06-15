@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import type { FunctionComponent } from 'react';
+import { useTheme } from '../theme-context.js';
 
 interface Node {
   role: string;
@@ -13,6 +14,7 @@ interface OrchestratorTreeProps {
 }
 
 const TreeNode: FunctionComponent<{ node: Node; depth: number }> = ({ node, depth }) => {
+  const theme = useTheme();
   const statusSymbol = {
     running: ' ◐',
     done: ' ✓',
@@ -21,10 +23,10 @@ const TreeNode: FunctionComponent<{ node: Node; depth: number }> = ({ node, dept
   }[node.status];
 
   const statusColor = {
-    running: '#61afef',
-    done: '#98c379',
-    error: '#e06c75',
-    pending: '#555',
+    running: theme.info,
+    done: theme.success,
+    error: theme.error,
+    pending: theme.muted,
   }[node.status];
 
   return (
@@ -43,8 +45,9 @@ const TreeNode: FunctionComponent<{ node: Node; depth: number }> = ({ node, dept
 };
 
 export const OrchestratorTree: FunctionComponent<OrchestratorTreeProps> = ({ nodes }) => {
+  const theme = useTheme();
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="#444" paddingX={1}>
+    <Box flexDirection="column" borderStyle="round" borderColor={theme.border} paddingX={1}>
       <Text dimColor> orchestrator</Text>
       {nodes.map((node, i) => (
         <TreeNode key={i} node={node} depth={0} />

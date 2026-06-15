@@ -37,6 +37,7 @@ export function calculateCost(
   inputRate: number,
   outputRate: number,
 ): { inputCost: number; outputCost: number } {
+
   return {
     inputCost: (inputTokens / 1_000) * inputRate,
     outputCost: (outputTokens / 1_000) * outputRate,

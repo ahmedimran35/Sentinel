@@ -38,12 +38,16 @@ export class MCPClient extends EventEmitter {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
-    this.proc.stdout!.on('data', (chunk: Buffer) => {
+    if (!this.proc.stdout || !this.proc.stderr || !this.proc.stdin) {
+      throw new Error(`Failed to spawn ${command}: stdio pipes not available`);
+    }
+
+    this.proc.stdout.on('data', (chunk: Buffer) => {
       this.buffer += chunk.toString();
       this.processBuffer();
     });
 
-    this.proc.stderr!.on('data', (chunk: Buffer) => {
+    this.proc.stderr.on('data', (chunk: Buffer) => {
       this.emit('stderr', chunk.toString());
     });
 

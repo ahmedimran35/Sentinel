@@ -1,0 +1,104 @@
+{
+  "name": "sentinel-vscode",
+  "version": "0.1.0",
+  "private": true,
+  "displayName": "Sentinel",
+  "description": "AI coding agent for VS Code",
+  "publisher": "sentinel",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "sentinel.start",
+        "title": "Sentinel: Start"
+      },
+      {
+        "command": "sentinel.stop",
+        "title": "Sentinel: Stop"
+      },
+      {
+        "command": "sentinel.toggleChat",
+        "title": "Sentinel: Toggle Chat"
+      },
+      {
+        "command": "sentinel.sendSelection",
+        "title": "Sentinel: Send Selection"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "sentinel",
+          "title": "Sentinel",
+          "icon": "$(rocket)"
+        }
+      ]
+    },
+    "views": {
+      "sentinel": [
+        {
+          "type": "webview",
+          "id": "sentinel.chat",
+          "name": "Chat"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "sentinel.toggleChat",
+        "key": "ctrl+shift+x",
+        "mac": "cmd+shift+x"
+      },
+      {
+        "command": "sentinel.sendSelection",
+        "key": "ctrl+shift+s",
+        "mac": "cmd+shift+s",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Sentinel",
+      "properties": {
+        "sentinel.serverPort": {
+          "type": "number",
+          "default": 4096,
+          "description": "Sentinel server port"
+        },
+        "sentinel.serverHost": {
+          "type": "string",
+          "default": "localhost",
+          "description": "Sentinel server host"
+        },
+        "sentinel.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-start Sentinel server"
+        },
+        "sentinel.password": {
+          "type": "string",
+          "default": "",
+          "description": "Server password"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.120.0",
+    "typescript": "^5.9.3"
+  }
+}

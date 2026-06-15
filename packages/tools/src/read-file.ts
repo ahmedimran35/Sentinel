@@ -1,9 +1,49 @@
 import { z } from 'zod';
 import fs from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
+import { relative } from 'node:path';
 import type { Tool } from '@sentinel/shared';
 
 const MAX_LINES = 2000;
+
+function getProjectRoot(): string {
+  return realpathSync(process.env.SENTINEL_PROJECT_ROOT || process.cwd());
+}
+
+function isPathWithinRoot(targetPath: string): boolean {
+  try {
+    const root = getProjectRoot();
+    let resolvedTarget: string;
+    try {
+      resolvedTarget = realpathSync(targetPath);
+    } catch {
+      resolvedTarget = resolvePathForNonExistent(targetPath, root);
+    }
+    const rel = relative(root, resolvedTarget);
+    return !rel.startsWith('..') && !rel.startsWith('/');
+  } catch {
+    return false;
+  }
+}
+
+function resolvePathForNonExistent(targetPath: string, _root: string): string {
+  try {
+    let current = path.resolve(targetPath);
+    const parts: string[] = [];
+    for (let i = 0; i < 100; i++) {
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      parts.push(path.basename(current));
+      current = parent;
+      try {
+        const resolvedBase = realpathSync(current);
+        return path.join(resolvedBase, ...parts.reverse());
+      } catch { /* continue walking up */ }
+    }
+  } catch { /* fall through */ }
+  return path.resolve(targetPath);
+}
 
 const ReadFileSchema = z.object({
   path: z.string(),
@@ -35,6 +75,15 @@ export const readFileTool: Tool<typeof ReadFileSchema> = {
     if (ctx.signal.aborted) return;
 
     const filePath = path.resolve(input.path);
+
+    if (!isPathWithinRoot(filePath)) {
+      yield {
+        type: 'tool_result',
+        turnId: ctx.sessionId,
+        result: { callId: 'read', output: 'Read denied: path is outside project root.', isError: true },
+      };
+      return;
+    }
 
     try {
       if (await isBinary(filePath)) {
@@ -72,7 +121,7 @@ export const readFileTool: Tool<typeof ReadFileSchema> = {
         turnId: ctx.sessionId,
         result: {
           callId: 'read',
-          output: `Error reading file: ${err instanceof Error ? err.message : String(err)}`,
+          output: 'Failed to read file.',
           isError: true,
         },
       };

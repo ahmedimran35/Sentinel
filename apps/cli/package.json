@@ -15,21 +15,24 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "build": "node esbuild.config.mjs",
+    "build:prod": "NODE_ENV=production node esbuild.config.mjs",
+    "typecheck": "tsc --noEmit --pretty"
   },
   "dependencies": {
     "@sentinel/core": "workspace:*",
     "@sentinel/providers": "workspace:*",
+    "@sentinel/server": "workspace:*",
     "@sentinel/sdk": "workspace:*",
+    "@sentinel/shared": "workspace:*",
     "@sentinel/tools": "workspace:*",
     "@sentinel/tui": "workspace:*",
     "commander": "^15.0.0",
-    "ink": "^5.0.0",
-    "react": "^18.3.1"
+    "ink": "^7.0.0",
+    "react": "^19.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.0",
+    "@types/react": "^19.2.0",
     "typescript": "^5.7.0"
   }
 }

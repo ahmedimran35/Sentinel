@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 
 export interface RepoAnalysis {
   languages: string[];
@@ -134,11 +134,13 @@ export async function initAgentsMd(rootDir: string): Promise<string> {
 async function discoverFiles(rootDir: string): Promise<string[]> {
   const files: string[] = [];
   try {
-    const result = execSync(`find "${rootDir}" -maxdepth 3 -type f 2>/dev/null | head -500`, {
+    const result = spawnSync('find', [rootDir, '-maxdepth', '3', '-type', 'f'], {
       encoding: 'utf-8',
       timeout: 10_000,
+      stdio: 'pipe',
+      stderr: 'ignore',
     });
-    for (const file of result.trim().split('\n').filter(Boolean)) {
+    for (const file of (result.stdout ?? '').trim().split('\n').filter(Boolean).slice(0, 500)) {
       if (!file.includes('node_modules') && !file.includes('.git/')) {
         files.push(file);
       }
@@ -149,4 +151,47 @@ async function discoverFiles(rootDir: string): Promise<string[]> {
 
 async function fileExists(filePath: string): Promise<boolean> {
   try { await fs.access(filePath); return true; } catch { return false; }
+}
+
+export async function loadGlobalAgentsMd(): Promise<string | null> {
+  const candidates = [
+    path.join(process.env.HOME || '/tmp', '.config', 'sentinel', 'AGENTS.md'),
+    path.join(process.env.HOME || '/tmp', '.config', 'opencode', 'AGENTS.md'),
+    path.join(process.env.HOME || '/tmp', '.claude', 'CLAUDE.md'),
+  ];
+  if (process.env.OPENCODE_DISABLE_CLAUDE_CODE) {
+    return null;
+  }
+  if (process.env.OPENCODE_DISABLE_CLAUDE_CODE_PROMPT) {
+    return null;
+  }
+  for (const fp of candidates) {
+    try {
+      const content = await fs.readFile(fp, 'utf-8');
+      if (content.trim()) return content;
+    } catch { /* not found */ }
+  }
+  return null;
+}
+
+export async function loadInstructionFiles(
+  instructions: string[],
+  projectRoot: string,
+): Promise<string[]> {
+  const results: string[] = [];
+  for (const entry of instructions) {
+    try {
+      if (entry.startsWith('http://') || entry.startsWith('https://')) {
+        const res = await fetch(entry);
+        if (res.ok) results.push(await res.text());
+      } else {
+        const fp = path.isAbsolute(entry)
+          ? entry
+          : path.join(projectRoot, entry);
+        const content = await fs.readFile(fp, 'utf-8');
+        if (content.trim()) results.push(content);
+      }
+    } catch { /* skip unreadable */ }
+  }
+  return results;
 }

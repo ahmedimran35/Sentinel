@@ -10,6 +10,7 @@ import { grepTool } from './grep.js';
 import { todoTool } from './todo.js';
 
 const testDir = path.join(os.tmpdir(), `sentinel-tools-test-${Date.now()}`);
+process.env.SENTINEL_PROJECT_ROOT = testDir;
 const testFile = path.join(testDir, 'test.txt');
 const sessionId = 'test-session';
 

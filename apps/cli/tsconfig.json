@@ -10,6 +10,7 @@
     { "path": "../../packages/providers" },
     { "path": "../../packages/tools" },
     { "path": "../../packages/sdk" },
+    { "path": "../../packages/shared" },
     { "path": "../../packages/tui" }
   ]
 }

@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { LSPServerDef } from './lsp-servers.js';
 
 interface LSPRequest {
   id: number;
@@ -19,6 +20,24 @@ export interface Diagnostic {
   column: number;
   message: string;
   severity: 'error' | 'warning' | 'info';
+}
+
+export interface LSPLocation {
+  uri: string;
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+}
+
+export interface LSPSymbol {
+  name: string;
+  kind: number;
+  location: LSPLocation;
+}
+
+export interface LSPHoverResult {
+  contents: Array<{ kind: string; value: string }> | { kind: string; value: string } | string;
 }
 
 const LSP_COMMANDS: Record<string, string> = {
@@ -56,44 +75,53 @@ export class LSPManager {
     return () => { this.listeners = this.listeners.filter((l) => l !== cb); };
   }
 
-  async start(filePath: string): Promise<string | null> {
-    const lang = detectLanguage(filePath);
+  async start(filePath: string, serverDef?: LSPServerDef): Promise<string | null> {
+    const lang = serverDef?.name ?? detectLanguage(filePath);
     if (!lang) return null;
 
     if (this.processes.has(lang)) return lang;
 
-    const cmd = LSP_COMMANDS[lang];
-    if (!cmd) return null;
+    const cmdParts = serverDef?.command ?? LSP_COMMANDS[lang]?.split(' ');
+    if (!cmdParts || cmdParts.length === 0) return null;
 
-    const [program, ...args] = cmd.split(' ');
+    const [program, ...args] = cmdParts;
     const proc = spawn(program!, args, {
       stdio: ['pipe', 'pipe', 'pipe'],
+      env: serverDef?.env ? { ...process.env, ...serverDef.env } : process.env,
     });
 
     this.processes.set(lang, proc);
     this.buffer.set(lang, '');
 
-    proc.stdout!.on('data', (chunk: Buffer) => {
-      this.handleData(lang, chunk);
-    });
+    if (proc.stdout) {
+      proc.stdout.on('data', (chunk: Buffer) => {
+        this.handleData(lang, chunk);
+      });
+    }
 
-    proc.stderr!.on('data', (_chunk: Buffer) => {
-      // LSP stderr is typically logging
-    });
+    if (proc.stderr) {
+      proc.stderr.on('data', (_chunk: Buffer) => {
+        // LSP stderr is typically logging
+      });
+    }
 
     proc.on('exit', () => {
       this.processes.delete(lang);
       this.buffer.delete(lang);
     });
 
-    await this.sendRequest(lang, 'initialize', {
+    const initParams: Record<string, unknown> = {
       processId: process.pid,
       capabilities: {
         textDocument: {
           diagnostic: { dynamicRegistration: true },
         },
       },
-    });
+    };
+    if (serverDef?.initialization) {
+      initParams.initializationOptions = serverDef.initialization;
+    }
+    await this.sendRequest(lang, 'initialize', initParams);
 
     this.sendNotification(lang, 'initialized', {});
 
@@ -120,8 +148,70 @@ export class LSPManager {
 
   async requestDiagnostics(_lang: string, filePath: string): Promise<Diagnostic[]> {
     const existing = this.diagnostics.filter((d) => d.file === filePath);
-    // LSP pushes diagnostics via notifications; we return what we've collected
     return existing;
+  }
+
+  async goToDefinition(lang: string, filePath: string, line: number, column: number): Promise<{ uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } } | null> {
+    const uri = filePathToUri(filePath);
+    try {
+      const result = await this.sendRequest(lang, 'textDocument/definition', {
+        textDocument: { uri },
+        position: { line, character: column },
+      }) as { uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } } | null;
+      return result;
+    } catch {
+      return null;
+    }
+  }
+
+  async findReferences(lang: string, filePath: string, line: number, column: number): Promise<Array<{ uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } }>> {
+    const uri = filePathToUri(filePath);
+    try {
+      const result = await this.sendRequest(lang, 'textDocument/references', {
+        textDocument: { uri },
+        position: { line, character: column },
+        context: { includeDeclaration: true },
+      }) as Array<{ uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } }>;
+      return result;
+    } catch {
+      return [];
+    }
+  }
+
+  async hover(lang: string, filePath: string, line: number, column: number): Promise<{ contents: Array<{ kind: string; value: string }> | { kind: string; value: string } | string } | null> {
+    const uri = filePathToUri(filePath);
+    try {
+      const result = await this.sendRequest(lang, 'textDocument/hover', {
+        textDocument: { uri },
+        position: { line, character: column },
+      }) as { contents: Array<{ kind: string; value: string }> | { kind: string; value: string } | string } | null;
+      return result;
+    } catch {
+      return null;
+    }
+  }
+
+  async documentSymbol(lang: string, filePath: string): Promise<Array<{ name: string; kind: number; range: { start: { line: number; character: number }; end: { line: number; character: number } }; selectionRange: { start: { line: number; character: number }; end: { line: number; character: number } } }>> {
+    const uri = filePathToUri(filePath);
+    try {
+      const result = await this.sendRequest(lang, 'textDocument/documentSymbol', {
+        textDocument: { uri },
+      }) as Array<{ name: string; kind: number; range: { start: { line: number; character: number }; end: { line: number; character: number } }; selectionRange: { start: { line: number; character: number }; end: { line: number; character: number } } }>;
+      return result;
+    } catch {
+      return [];
+    }
+  }
+
+  async workspaceSymbol(lang: string, query: string): Promise<Array<{ name: string; kind: number; location: { uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } } }>> {
+    try {
+      const result = await this.sendRequest(lang, 'workspace/symbol', {
+        query,
+      }) as Array<{ name: string; kind: number; location: { uri: string; range: { start: { line: number; character: number }; end: { line: number; character: number } } } }>;
+      return result;
+    } catch {
+      return [];
+    }
   }
 
   stop(): void {
@@ -217,6 +307,10 @@ export class LSPManager {
 
   get allDiagnostics(): Diagnostic[] {
     return [...this.diagnostics];
+  }
+
+  get languages(): string[] {
+    return Array.from(this.processes.keys());
   }
 }
 

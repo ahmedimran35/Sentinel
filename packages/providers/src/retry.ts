@@ -5,10 +5,12 @@ export interface RetryOptions {
 }
 
 export function jitter(delayMs: number): number {
+
   return Math.round(delayMs * (0.5 + Math.random() * 0.5));
 }
 
 export function exponentialBackoff(attempt: number, baseDelayMs: number, maxDelayMs: number): number {
+
   const delay = Math.min(baseDelayMs * 2 ** attempt, maxDelayMs);
   return jitter(delay);
 }

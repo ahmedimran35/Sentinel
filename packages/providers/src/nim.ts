@@ -6,7 +6,7 @@ export interface NIMConfig {
   baseUrl?: string;
 }
 
-export function createNIMProvider(config: NIMConfig) {
+export function createNIMProvider(config: NIMConfig): OpenAICompatProvider {
   const openAIConfig: OpenAICompatConfig = {
     apiKey: config.apiKey,
     model: config.model,

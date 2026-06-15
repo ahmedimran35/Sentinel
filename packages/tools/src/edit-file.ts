@@ -1,8 +1,49 @@
 import { z } from 'zod';
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
+import { relative } from 'node:path';
 import os from 'node:os';
 import type { Tool } from '@sentinel/shared';
+
+function getProjectRoot(): string {
+  return realpathSync(process.env.SENTINEL_PROJECT_ROOT || process.cwd());
+}
+
+function isPathWithinRoot(targetPath: string): boolean {
+  try {
+    const root = getProjectRoot();
+    let resolvedTarget: string;
+    try {
+      resolvedTarget = realpathSync(targetPath);
+    } catch {
+      resolvedTarget = resolvePathForNonExistent(targetPath, root);
+    }
+    const rel = relative(root, resolvedTarget);
+    return !rel.startsWith('..') && !rel.startsWith('/');
+  } catch {
+    return false;
+  }
+}
+
+function resolvePathForNonExistent(targetPath: string, _root: string): string {
+  try {
+    let current = path.resolve(targetPath);
+    const parts: string[] = [];
+    for (let i = 0; i < 100; i++) {
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      parts.push(path.basename(current));
+      current = parent;
+      try {
+        const resolvedBase = realpathSync(current);
+        return path.join(resolvedBase, ...parts.reverse());
+      } catch { /* continue walking up */ }
+    }
+  } catch { /* fall through */ }
+  return path.resolve(targetPath);
+}
 
 const EditFileSchema = z.object({
   path: z.string(),
@@ -30,6 +71,19 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
 
     const filePath = path.resolve(input.path);
 
+    if (!isPathWithinRoot(filePath)) {
+      yield {
+        type: 'tool_result',
+        turnId: ctx.sessionId,
+        result: {
+          callId: 'edit',
+          output: 'Edit denied: path is outside project root.',
+          isError: true,
+        },
+      };
+      return;
+    }
+
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       const currentHash = simpleHash(content);
@@ -41,7 +95,7 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
           turnId: ctx.sessionId,
           result: {
             callId: 'edit',
-            output: `Stale-edit guard: file ${input.path} has changed since last read. Re-read and try again.`,
+            output: `Stale-edit guard: file has changed since last read. Re-read and try again.`,
             isError: true,
           },
         };
@@ -55,7 +109,7 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
           turnId: ctx.sessionId,
           result: {
             callId: 'edit',
-            output: `Could not find old_str in ${input.path}. old_str must match exactly, including whitespace.`,
+            output: `Could not find old_str. old_str must match exactly, including whitespace.`,
             isError: true,
           },
         };
@@ -66,10 +120,7 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
 
       await fs.mkdir(path.dirname(filePath), { recursive: true });
 
-      const tmpPath = path.join(
-        os.tmpdir(),
-        `.sentinel-edit-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      );
+      const tmpPath = path.join(os.tmpdir(), `.sentinel-edit-${randomUUID()}`);
       await fs.writeFile(tmpPath, newContent, 'utf-8');
       await fs.rename(tmpPath, filePath);
 
@@ -80,7 +131,7 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
         turnId: ctx.sessionId,
         result: {
           callId: 'edit',
-          output: `Applied edit to ${input.path} (${Buffer.byteLength(input.old_str, 'utf-8')} bytes replaced)`,
+          output: `Applied edit (${Buffer.byteLength(input.old_str, 'utf-8')} bytes replaced)`,
           isError: false,
         },
       };
@@ -90,7 +141,7 @@ export const editFileTool: Tool<typeof EditFileSchema> = {
         turnId: ctx.sessionId,
         result: {
           callId: 'edit',
-          output: `Error editing file: ${err instanceof Error ? err.message : String(err)}`,
+          output: `Edit failed.`,
           isError: true,
         },
       };

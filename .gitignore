@@ -1,7 +1,11 @@
 node_modules/
 dist/
 .cache/
+.DS_Store
 *.tsbuildinfo
 .env
 .env.local
+.env.*
 .sentinel/
+packages/shared/shared
+.pnpmrc-temp.json

@@ -35,8 +35,7 @@ export async function runAgent(
   config: AgentConfig,
   callbacks?: RunCallbacks,
 ): Promise<RunResult> {
-  const { runTurn } = await import('@sentinel/core');
-  const { AlwaysAllowGate, ConfiguredGate } = await import('@sentinel/core');
+  const { runTurn, AlwaysAllowGate, ConfiguredGate, createProvider } = await import('@sentinel/core');
 
   const turnId = generateId();
   const cancel = new AbortController();
@@ -45,6 +44,8 @@ export async function runAgent(
   const gate = config.mode
     ? (new ConfiguredGate({ mode: config.mode, rules: { allow: [], deny: [] }, projectRoot: process.cwd(), allowOutsideRoot: false }, () => {}) as unknown as PermissionGate)
     : new AlwaysAllowGate();
+
+  const provider = await createProvider(config.provider, config.model);
 
   const stream = runTurn({
     turnId,
@@ -56,7 +57,7 @@ export async function runAgent(
     systemPrompt: config.systemPrompt ?? 'You are Sentinel, an AI coding assistant.',
     history: [{ role: 'user', content: input }],
     tools: [],
-    provider: null as never,
+    provider,
     gate,
     signal: cancel.signal,
     onEvent: callbacks?.onEvent,

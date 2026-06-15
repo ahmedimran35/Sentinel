@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 import type { FunctionComponent } from 'react';
+import { useTheme } from '../theme-context.js';
 
 interface ToastProps {
   message: string;
@@ -10,6 +11,7 @@ interface ToastProps {
 }
 
 export const Toast: FunctionComponent<ToastProps> = ({ message, type = 'info', durationMs = 3000, onDismiss }) => {
+  const theme = useTheme();
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -23,10 +25,10 @@ export const Toast: FunctionComponent<ToastProps> = ({ message, type = 'info', d
   if (!visible) return null;
 
   const colors: Record<string, string> = {
-    info: '#61afef',
-    success: '#7ecf7e',
-    warning: '#e5c07b',
-    error: '#e06c75',
+    info: theme.info,
+    success: theme.success,
+    warning: theme.warning,
+    error: theme.error,
   };
 
   return (

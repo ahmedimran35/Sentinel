@@ -23,9 +23,33 @@ export const webFetchTool: Tool<typeof WebFetchSchema> = {
 
     try {
       const urlObj = new URL(input.url);
-      const domain = urlObj.hostname.replace(/^www\./, '');
 
-      if (!ALLOWED_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))) {
+      if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') {
+        yield {
+          type: 'tool_result',
+          turnId: ctx.sessionId,
+          result: {
+            callId: 'fetch',
+            output: 'Only http and https protocols are allowed.',
+            isError: true,
+          },
+        };
+        return;
+      }
+
+      const rawDomain = urlObj.hostname;
+      const domain = rawDomain.replace(/^www\./, '');
+
+      const isAllowed = ALLOWED_DOMAINS.some((d) => {
+        if (domain === d) return true;
+        if (domain.endsWith('.' + d)) {
+          const prefix = domain.slice(0, -('.' + d).length);
+          return prefix.length > 0 && !prefix.includes('.');
+        }
+        return false;
+      });
+
+      if (!isAllowed) {
         yield {
           type: 'tool_result',
           turnId: ctx.sessionId,

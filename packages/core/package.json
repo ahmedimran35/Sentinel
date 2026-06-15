@@ -6,7 +6,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc",
@@ -14,8 +17,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@sentinel/mcp": "workspace:*",
     "@sentinel/providers": "workspace:*",
     "@sentinel/shared": "workspace:*",
+    "https-proxy-agent": "^9.1.0",
+    "socks-proxy-agent": "^10.1.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

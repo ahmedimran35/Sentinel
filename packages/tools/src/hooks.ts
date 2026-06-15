@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -20,6 +20,10 @@ export async function loadHooks(rootDir?: string): Promise<HooksConfig> {
   }
 }
 
+function shellEscape(s: string): string {
+  return `'${s.replace(/'/g, "'\\''")}'`;
+}
+
 export function runHook(hook: HookEvent, config: HooksConfig, data?: Record<string, string>): boolean {
   const cmd = config.hooks?.[hook];
   if (!cmd) return true;
@@ -28,11 +32,11 @@ export function runHook(hook: HookEvent, config: HooksConfig, data?: Record<stri
     let resolved = cmd;
     if (data) {
       for (const [key, value] of Object.entries(data)) {
-        resolved = resolved.replaceAll(`{${key}}`, value);
+        resolved = resolved.replaceAll(`{${key}}`, shellEscape(value));
       }
     }
-    execSync(resolved, { timeout: 30_000, stdio: 'pipe' });
-    return true;
+    const result = spawnSync('sh', ['-c', resolved], { stdio: 'pipe', timeout: 30_000 });
+    return result.status === 0;
   } catch {
     return false;
   }

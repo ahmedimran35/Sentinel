@@ -16,6 +16,28 @@ interface ShellSession {
 
 const sessions = new Map<string, ShellSession>();
 
+const SAFE_ENV_KEYS = new Set([
+  'PATH', 'HOME', 'USER', 'LANG', 'LC_ALL', 'TERM', 'SHELL',
+  'TMPDIR', 'PWD', 'NODE_PATH', 'EDITOR',
+]);
+
+function getSafeEnv(): Record<string, string | undefined> {
+  const env: Record<string, string | undefined> = { TERM: 'dumb' };
+  for (const key of SAFE_ENV_KEYS) {
+    if (process.env[key]) env[key] = process.env[key];
+  }
+  return env;
+}
+
+let shellPath = 'bash';
+try {
+  const userShell = process.env.SHELL || 'bash';
+  spawn(userShell, ['--version'], { stdio: 'ignore', timeout: 2000 });
+  shellPath = userShell;
+} catch {
+  shellPath = 'bash';
+}
+
 export function getSessionCwd(sessionId: string): string | undefined {
   return sessions.get(sessionId)?.cwd;
 }
@@ -30,7 +52,7 @@ export function destroySession(sessionId: string): void {
 
 export const bashTool: Tool<typeof BashSchema> = {
   name: 'bash',
-  description: 'Run a shell command in a persistent shell session. Default 30s timeout. Preserves cwd across calls.',
+  description: 'Run a shell command. Default 30s timeout.',
   risk: 'execute',
   inputSchema: BashSchema,
   async *execute(input, ctx) {
@@ -38,22 +60,27 @@ export const bashTool: Tool<typeof BashSchema> = {
 
     let session = sessions.get(ctx.sessionId);
     if (!session) {
-      const proc = spawn('bash', ['-i'], {
+      const proc = spawn(shellPath, ['-s'], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, TERM: 'dumb' },
+        env: getSafeEnv(),
       });
+      if (!proc.stdout || !proc.stderr || !proc.stdin) {
+        throw new Error('Failed to create shell process: stdio pipes not available');
+      }
       session = { cwd: input.workdir ?? process.cwd(), proc, buffer: '' };
       sessions.set(ctx.sessionId, session);
 
-      proc.stdout!.on('data', (chunk: Buffer) => { session!.buffer += chunk.toString(); });
-      proc.stderr!.on('data', (chunk: Buffer) => { session!.buffer += chunk.toString(); });
+      proc.stdout.on('data', (chunk: Buffer) => { session!.buffer += chunk.toString(); });
+      proc.stderr.on('data', (chunk: Buffer) => { session!.buffer += chunk.toString(); });
     }
 
     const startDir = `'${session.cwd.replace(/'/g, "'\\''")}'`;
     const fullCommand = `cd ${startDir} 2>/dev/null; ${input.command}; echo "EXIT:$?"`;
 
     const prevLen = session.buffer.length;
-    session.proc.stdin!.write(fullCommand + '\n');
+    if (session.proc.stdin) {
+      session.proc.stdin.write(fullCommand + '\n');
+    }
 
     const output = await waitForOutput(session, prevLen, input.timeout_ms, ctx);
 
@@ -102,8 +129,8 @@ function waitForOutput(
     const cleanup = () => {
       clearTimeout(timer);
       ctx.signal.removeEventListener('abort', onAbort);
-      session.proc.stdout!.off('data', check);
-      session.proc.stderr!.off('data', check);
+      if (session.proc.stdout) session.proc.stdout.off('data', check);
+      if (session.proc.stderr) session.proc.stderr.off('data', check);
       session.proc.off('exit', onExit);
     };
 
@@ -112,8 +139,8 @@ function waitForOutput(
       resolve(session.buffer.slice(prevLen));
     };
 
-    session.proc.stdout!.on('data', check);
-    session.proc.stderr!.on('data', check);
+    if (session.proc.stdout) session.proc.stdout.on('data', check);
+    if (session.proc.stderr) session.proc.stderr.on('data', check);
     session.proc.on('exit', onExit);
   });
 }

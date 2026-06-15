@@ -15,8 +15,12 @@ export class EventBus {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-    this.listeners.get(type)!.add(listener);
-    return () => this.listeners.get(type)!.delete(listener);
+    const listeners = this.listeners.get(type);
+    if (listeners) {
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
+    }
+    return () => {};
   }
 
   emit(event: SentinelEvent): void {

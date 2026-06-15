@@ -6,6 +6,7 @@ export interface AnthropicConfig {
   apiKey: string;
   model: string;
   baseUrl?: string;
+  headers?: Record<string, string>;
 }
 
 interface AnthropicContentBlock {
@@ -22,6 +23,7 @@ interface AnthropicStreamEvent {
   delta?: { text?: string; partial_json?: string };
   index?: number;
   message?: { id: string };
+  usage?: { input_tokens: number; output_tokens: number; cache_creation_input_tokens?: number; cache_read_input_tokens?: number };
 }
 
 export class AnthropicProvider implements Provider {
@@ -47,6 +49,7 @@ export class AnthropicProvider implements Provider {
         'Content-Type': 'application/json',
         'x-api-key': this.config.apiKey,
         'anthropic-version': '2023-06-01',
+        ...this.config.headers,
       },
       body: JSON.stringify({
         model: this.config.model,
@@ -73,8 +76,10 @@ export class AnthropicProvider implements Provider {
     }
 
     const body = response.body;
+    let tokenUsage: { input: number; output: number; cache_read?: number } | undefined;
+
     if (!body) {
-      yield { type: 'turn_end', turnId: 'anthropic' };
+      yield { type: 'turn_end', turnId: 'anthropic', usage: tokenUsage };
       return;
     }
 
@@ -85,6 +90,14 @@ export class AnthropicProvider implements Provider {
       if (msg.event === 'message_stop') break;
 
       const parsed = parseJSONData<AnthropicStreamEvent>(msg);
+
+      if (parsed.type === 'message_delta' && parsed.usage) {
+        tokenUsage = {
+          input: parsed.usage.input_tokens,
+          output: parsed.usage.output_tokens,
+          cache_read: parsed.usage.cache_read_input_tokens,
+        };
+      }
 
       if (parsed.type === 'content_block_start' && parsed.content_block) {
         const block = parsed.content_block;
@@ -119,7 +132,7 @@ export class AnthropicProvider implements Provider {
       }
     }
 
-    yield { type: 'turn_end', turnId: 'anthropic' };
+    yield { type: 'turn_end', turnId: 'anthropic', usage: tokenUsage };
   }
 
   countTokens(text: string): number {

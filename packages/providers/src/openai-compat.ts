@@ -1,11 +1,41 @@
 import type { SentinelEvent, Tool, TurnConfig } from '@sentinel/shared';
+import { sanitizeJson } from '@sentinel/shared';
 import type { Provider, ProviderMessage } from './types.js';
 import { parseSSE, parseJSONData } from './sse-parser.js';
+import { z } from 'zod';
+
+function zodToJsonSchema(schema: z.ZodTypeAny): Record<string, unknown> {
+  if (schema instanceof z.ZodObject) {
+    const shape = schema._def.shape();
+    const properties: Record<string, unknown> = {};
+    const required: string[] = [];
+    for (const [key, val] of Object.entries(shape)) {
+      if (val instanceof z.ZodType) {
+        properties[key] = zodToJsonSchema(val);
+        if (!(val instanceof z.ZodOptional) && !(val._def?.innerType instanceof z.ZodOptional)) {
+          const isOptional = val.isOptional?.() ?? val instanceof z.ZodOptional;
+          if (!isOptional) required.push(key);
+        }
+      }
+    }
+    return { type: 'object', properties, ...(required.length > 0 ? { required } : {}) };
+  }
+  if (schema instanceof z.ZodString) return { type: 'string' };
+  if (schema instanceof z.ZodNumber) return { type: 'number' };
+  if (schema instanceof z.ZodBoolean) return { type: 'boolean' };
+  if (schema instanceof z.ZodArray) return { type: 'array', items: zodToJsonSchema(schema._def.type) };
+  if (schema instanceof z.ZodEnum) return { type: 'string', enum: schema._def.values };
+  if (schema instanceof z.ZodOptional) return zodToJsonSchema(schema._def.innerType);
+  if (schema instanceof z.ZodDefault) return zodToJsonSchema(schema._def.innerType);
+  return { type: 'string' };
+}
 
 export interface OpenAICompatConfig {
   apiKey: string;
   model: string;
   baseUrl: string;
+  headers?: Record<string, string>;
+  chunkTimeout?: number;
 }
 
 interface OpenAIChoice {
@@ -23,6 +53,7 @@ interface OpenAIToolCallDelta {
 
 interface OpenAIStreamChunk {
   choices: OpenAIChoice[];
+  usage?: { prompt_tokens: number; completion_tokens: number };
 }
 
 export function createOpenAIProvider(
@@ -48,27 +79,43 @@ export class OpenAICompatProvider implements Provider {
     _config: TurnConfig,
     signal: AbortSignal,
   ): AsyncIterable<SentinelEvent> {
+    const toolDefs = tools.length > 0
+      ? tools.map((t) => ({
+          type: 'function' as const,
+          function: {
+            name: t.name,
+            description: t.description,
+            parameters: zodToJsonSchema(t.inputSchema as z.ZodTypeAny),
+          },
+        }))
+      : undefined;
+
+    const body = JSON.stringify({
+      model: this.config.model,
+      messages: messages.map((m) => {
+        const msg: Record<string, unknown> = { role: m.role };
+        if (m.tool_calls) {
+          msg.content = null;
+          msg.tool_calls = m.tool_calls;
+        } else {
+          msg.content = m.content;
+        }
+        if (m.tool_call_id) msg.tool_call_id = m.tool_call_id;
+        if (m.name) msg.name = m.name;
+        return msg;
+      }),
+      stream: true,
+      tools: toolDefs,
+    });
+
     const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.config.apiKey}`,
+        ...this.config.headers,
       },
-      body: JSON.stringify({
-        model: this.config.model,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
-        stream: true,
-        tools: tools.length > 0
-          ? tools.map((t) => ({
-              type: 'function' as const,
-              function: {
-                name: t.name,
-                description: t.description,
-                parameters: t.inputSchema,
-              },
-            }))
-          : undefined,
-      }),
+      body,
       signal,
     });
 
@@ -79,18 +126,23 @@ export class OpenAICompatProvider implements Provider {
       });
     }
 
-    const body = response.body;
-    if (!body) {
-      yield { type: 'turn_end', turnId: 'openai' };
+    const respBody = response.body;
+    const toolDeltas = new Map<number, { id?: string; name?: string; args: string }>();
+    let tokenUsage: { input: number; output: number } | undefined;
+
+    if (!respBody) {
+      yield { type: 'turn_end', turnId: 'openai', usage: tokenUsage };
       return;
     }
 
-    const toolDeltas = new Map<number, { id?: string; name?: string; args: string }>();
-
-    for await (const msg of parseSSE(body, signal)) {
+    for await (const msg of parseSSE(respBody, signal, this.config.chunkTimeout)) {
       if (msg.data === '[DONE]') break;
 
       const parsed = parseJSONData<OpenAIStreamChunk>(msg);
+
+      if (parsed.usage) {
+        tokenUsage = { input: parsed.usage.prompt_tokens, output: parsed.usage.completion_tokens };
+      }
 
       for (const choice of parsed.choices) {
         const delta = choice.delta;
@@ -134,7 +186,7 @@ export class OpenAICompatProvider implements Provider {
           call: {
             id: delta.id,
             name: delta.name,
-            args: delta.args ? JSON.parse(delta.args) as Record<string, unknown> : {},
+            args: delta.args ? sanitizeJson(delta.args) as Record<string, unknown> : {},
           },
         };
       }

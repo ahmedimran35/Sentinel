@@ -5,5 +5,5 @@
     "rootDir": "./src"
   },
   "include": ["src"],
-  "references": [{ "path": "../shared" }, { "path": "../providers" }]
+  "references": [{ "path": "../shared" }, { "path": "../providers" }, { "path": "../mcp" }]
 }

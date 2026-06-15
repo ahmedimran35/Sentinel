@@ -1,3 +1,5 @@
+import { sanitizeJson } from '@sentinel/shared';
+
 export interface SSEMessage {
   event?: string;
   data: string;
@@ -7,6 +9,7 @@ export interface SSEMessage {
 export async function* parseSSE(
   stream: ReadableStream<Uint8Array>,
   signal: AbortSignal,
+  chunkTimeoutMs?: number,
 ): AsyncGenerator<SSEMessage> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
@@ -19,7 +22,20 @@ export async function* parseSSE(
     while (true) {
       if (signal.aborted) break;
 
-      const { done, value } = await reader.read();
+      const readPromise = reader.read();
+      let done: boolean;
+      let value: Uint8Array | undefined;
+
+      if (chunkTimeoutMs !== undefined) {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          const timer = setTimeout(() => reject(new Error(`Chunk timeout after ${chunkTimeoutMs}ms`)), chunkTimeoutMs);
+          signal.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason); });
+        });
+        ({ done, value } = await Promise.race([readPromise, timeoutPromise]));
+      } else {
+        ({ done, value } = await readPromise);
+      }
+
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
@@ -54,5 +70,5 @@ export async function* parseSSE(
 }
 
 export function parseJSONData<T>(msg: SSEMessage): T {
-  return JSON.parse(msg.data) as T;
+  return sanitizeJson(msg.data) as T;
 }
